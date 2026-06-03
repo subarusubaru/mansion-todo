@@ -15,13 +15,17 @@ export default function Auth() {
     setError('')
     setMessage('')
 
+    console.log('[Auth] Supabase URL:', import.meta.env.VITE_SUPABASE_URL)
+
     if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) setError(error.message)
+      const { data, error } = await supabase.auth.signUp({ email, password })
+      console.log('[Auth] signUp result:', { data, error })
+      if (error) setError(`${error.message} (status: ${error.status ?? 'network'})`)
       else setMessage('確認メールを送信しました。メールボックスをご確認ください。')
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setError('メールアドレスまたはパスワードが正しくありません。')
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      console.log('[Auth] signIn result:', { data, error })
+      if (error) setError(`${error.message} (status: ${error.status ?? 'network'})`)
     }
     setLoading(false)
   }
