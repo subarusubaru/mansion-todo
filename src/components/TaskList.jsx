@@ -28,14 +28,49 @@ export default function TaskList({ mansion }) {
     setLoading(false)
   }, [mansion.id])
 
+  // 初回取得
   useEffect(() => {
     fetchTasks()
   }, [fetchTasks])
 
+  // リアルタイム購読
+  useEffect(() => {
+    const channel = supabase
+      .channel(`tasks:${mansion.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `mansion_id=eq.${mansion.id}`,
+        },
+        payload => {
+          if (payload.eventType === 'INSERT') {
+            setTasks(prev =>
+              prev.some(t => t.id === payload.new.id)
+                ? prev
+                : [payload.new, ...prev]
+            )
+          } else if (payload.eventType === 'UPDATE') {
+            setTasks(prev =>
+              prev.map(t => t.id === payload.new.id ? payload.new : t)
+            )
+          } else if (payload.eventType === 'DELETE') {
+            setTasks(prev => prev.filter(t => t.id !== payload.old.id))
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [mansion.id])
+
   async function handleDelete(taskId) {
     if (!confirm('このタスクを削除しますか？')) return
     await supabase.from('tasks').delete().eq('id', taskId)
-    setTasks(prev => prev.filter(t => t.id !== taskId))
   }
 
   function openAdd() {
@@ -77,7 +112,13 @@ export default function TaskList({ mansion }) {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-800">{mansion.name}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-gray-800">{mansion.name}</h2>
+              <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse inline-block"></span>
+                リアルタイム
+              </span>
+            </div>
             {mansion.address && (
               <p className="text-sm text-gray-500 mt-0.5">{mansion.address}</p>
             )}
@@ -184,7 +225,7 @@ export default function TaskList({ mansion }) {
           task={editingTask}
           mansionId={mansion.id}
           onClose={() => setShowForm(false)}
-          onSaved={() => { setShowForm(false); fetchTasks() }}
+          onSaved={() => setShowForm(false)}
         />
       )}
     </div>

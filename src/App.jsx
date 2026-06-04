@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from './lib/supabase'
 import Auth from './components/Auth'
 import Sidebar from './components/Sidebar'
@@ -27,11 +27,7 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  useEffect(() => {
-    if (session) fetchMansions()
-  }, [session])
-
-  async function fetchMansions() {
+  const fetchMansions = useCallback(async () => {
     const { data } = await supabase
       .from('mansions')
       .select('*')
@@ -44,7 +40,30 @@ export default function App() {
         return data[0] ?? null
       })
     }
-  }
+  }, [])
+
+  // 初回取得
+  useEffect(() => {
+    if (session) fetchMansions()
+  }, [session, fetchMansions])
+
+  // 物件のリアルタイム購読
+  useEffect(() => {
+    if (!session) return
+
+    const channel = supabase
+      .channel('mansions')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'mansions' },
+        () => { fetchMansions() }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [session, fetchMansions])
 
   if (loading) {
     return (
