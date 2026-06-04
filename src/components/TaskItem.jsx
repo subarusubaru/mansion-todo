@@ -5,7 +5,6 @@ const CATEGORY_COLORS = {
   '給水設備':   'bg-cyan-100 text-cyan-700',
   '排水設備':   'bg-blue-100 text-blue-700',
   '消防設備':   'bg-red-100 text-red-700',
-  '衛生':       'bg-teal-100 text-teal-700',
   '電気設備':   'bg-yellow-100 text-yellow-700',
   '外構':       'bg-lime-100 text-lime-700',
   '定期業務':   'bg-purple-100 text-purple-700',
