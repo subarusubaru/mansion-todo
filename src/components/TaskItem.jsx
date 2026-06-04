@@ -2,13 +2,16 @@ import { INTERVALS } from '../utils/intervals'
 import { calcNextDate, getDeadlineStatus, formatDate, formatDateObj } from '../utils/dateUtils'
 
 const CATEGORY_COLORS = {
-  '設備':     'bg-blue-100 text-blue-700',
-  '建物':     'bg-emerald-100 text-emerald-700',
-  '防災':     'bg-red-100 text-red-700',
-  '衛生':     'bg-teal-100 text-teal-700',
-  '電気':     'bg-yellow-100 text-yellow-700',
-  '定期業務': 'bg-purple-100 text-purple-700',
-  'その他':   'bg-gray-100 text-gray-600',
+  'その他設備': 'bg-blue-100 text-blue-700',
+  '給水設備':   'bg-cyan-100 text-cyan-700',
+  '消防設備':   'bg-red-100 text-red-700',
+  '建物':       'bg-emerald-100 text-emerald-700',
+  '衛生':       'bg-teal-100 text-teal-700',
+  '電気設備':   'bg-yellow-100 text-yellow-700',
+  '定期業務':   'bg-purple-100 text-purple-700',
+  '居住者対応': 'bg-orange-100 text-orange-700',
+  '組合運営':   'bg-indigo-100 text-indigo-700',
+  'その他':     'bg-gray-100 text-gray-600',
 }
 
 const STEP_COLORS = {
