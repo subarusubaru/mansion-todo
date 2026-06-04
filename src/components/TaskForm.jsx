@@ -71,7 +71,7 @@ export default function TaskForm({ task, mansionId, onClose, onSaved }) {
                 value={form.name}
                 onChange={e => set('name', e.target.value)}
                 required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="例: 消防設備点検"
               />
             </div>
@@ -83,7 +83,7 @@ export default function TaskForm({ task, mansionId, onClose, onSaved }) {
                 <select
                   value={form.category}
                   onChange={e => set('category', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -93,7 +93,7 @@ export default function TaskForm({ task, mansionId, onClose, onSaved }) {
                 <select
                   value={form.work_step}
                   onChange={e => set('work_step', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {WORK_STEPS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -108,7 +108,7 @@ export default function TaskForm({ task, mansionId, onClose, onSaved }) {
                   type="date"
                   value={form.last_date}
                   onChange={e => set('last_date', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -116,7 +116,7 @@ export default function TaskForm({ task, mansionId, onClose, onSaved }) {
                 <select
                   value={form.interval_key}
                   onChange={e => set('interval_key', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">なし</option>
                   {Object.entries(INTERVALS).map(([key, { label }]) => (
@@ -140,7 +140,7 @@ export default function TaskForm({ task, mansionId, onClose, onSaved }) {
                 value={form.memo}
                 onChange={e => set('memo', e.target.value)}
                 rows={3}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 placeholder="備考・詳細メモ..."
               />
             </div>

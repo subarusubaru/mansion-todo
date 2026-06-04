@@ -52,7 +52,7 @@ export default function MansionForm({ mansion, onClose, onSaved }) {
               value={name}
               onChange={e => setName(e.target.value)}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="〇〇マンション"
             />
           </div>
@@ -62,7 +62,7 @@ export default function MansionForm({ mansion, onClose, onSaved }) {
               type="text"
               value={address}
               onChange={e => setAddress(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="東京都〇〇区..."
             />
           </div>
