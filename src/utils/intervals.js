@@ -13,6 +13,6 @@ export const INTERVALS = {
   '10y': { label: '10年',  days: 3650 },
 }
 
-export const CATEGORIES = ['その他設備', '給水設備', '消防設備', '建物', '衛生', '電気設備', '定期業務', '居住者対応', '組合運営', 'その他']
+export const CATEGORIES = ['給水設備', '排水設備', '消防設備', '衛生', '電気設備', '外構', '定期業務', '居住者対応', '組合運営', 'その他']
 
 export const WORK_STEPS = ['未着手', '見積依頼済', '施工待ち', '実施済み']
