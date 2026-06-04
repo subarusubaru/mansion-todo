@@ -36,6 +36,10 @@ export default function TaskItem({ task, onEdit, onDelete }) {
     status === 'overdue' ? 'text-red-600 font-semibold' :
     status === 'soon'    ? 'text-yellow-600 font-semibold' : ''
 
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const isDueDateOverdue = task.due_date && new Date(task.due_date) < today
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-start gap-3">
@@ -69,6 +73,12 @@ export default function TaskItem({ task, onEdit, onDelete }) {
                 {nextDate && (
                   <span className={nextDateClass}>
                     次回期限: {formatDateObj(nextDate)}
+                  </span>
+                )}
+                {task.due_date && (
+                  <span className={isDueDateOverdue ? 'text-red-600 font-semibold' : ''}>
+                    期限: {formatDate(task.due_date)}
+                    {isDueDateOverdue && ' ⚠ 期限超過'}
                   </span>
                 )}
               </div>

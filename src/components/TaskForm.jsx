@@ -9,6 +9,7 @@ export default function TaskForm({ task, mansionId, onClose, onSaved }) {
     category:     task?.category     ?? 'その他',
     last_date:    task?.last_date    ?? '',
     interval_key: task?.interval_key ?? '',
+    due_date:     task?.due_date     ?? '',
     work_step:    task?.work_step    ?? '未着手',
     memo:         task?.memo         ?? '',
   })
@@ -31,6 +32,7 @@ export default function TaskForm({ task, mansionId, onClose, onSaved }) {
       category:     form.category,
       last_date:    form.last_date    || null,
       interval_key: form.interval_key || null,
+      due_date:     form.due_date     || null,
       work_step:    form.work_step,
       memo:         form.memo         || null,
     }
@@ -132,6 +134,17 @@ export default function TaskForm({ task, mansionId, onClose, onSaved }) {
                 次回期限: <span className="font-semibold">{formatDateObj(nextDate)}</span>
               </div>
             )}
+
+            {/* 期限 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">期限</label>
+              <input
+                type="date"
+                value={form.due_date}
+                onChange={e => set('due_date', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
 
             {/* メモ */}
             <div>
