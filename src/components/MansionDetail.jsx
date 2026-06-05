@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import TaskList from './TaskList'
 import RecurringTaskList from './RecurringTaskList'
+import MansionForm from './MansionForm'
 
 function formatBuiltAt(builtAt) {
   if (!builtAt) return null
@@ -19,6 +20,7 @@ function calcAge(builtAt) {
 
 export default function MansionDetail({ mansion, onMansionsChange }) {
   const [activeTab, setActiveTab] = useState('tasks')
+  const [showEdit, setShowEdit] = useState(false)
 
   const builtLabel = formatBuiltAt(mansion.built_at)
   const age = calcAge(mansion.built_at)
@@ -35,7 +37,7 @@ export default function MansionDetail({ mansion, onMansionsChange }) {
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col">
-      {/* 物件名・住所 */}
+      {/* 物件名・住所・詳細情報 */}
       <div className="bg-white border-b border-gray-200 px-6 pt-4 pb-0">
         <div className="flex items-start justify-between mb-2">
           <div>
@@ -44,9 +46,14 @@ export default function MansionDetail({ mansion, onMansionsChange }) {
               <p className="text-sm text-gray-500 mt-0.5">{mansion.address}</p>
             )}
           </div>
+          <button
+            onClick={() => setShowEdit(true)}
+            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors flex-shrink-0 ml-4"
+          >
+            物件を編集
+          </button>
         </div>
 
-        {/* 詳細情報 */}
         {infoItems.length > 0 && (
           <div className="flex flex-wrap gap-x-5 gap-y-1 mb-3">
             {infoItems.map(({ label, value }) => (
@@ -87,6 +94,14 @@ export default function MansionDetail({ mansion, onMansionsChange }) {
           <RecurringTaskList mansion={mansion} />
         )}
       </div>
+
+      {showEdit && (
+        <MansionForm
+          mansion={mansion}
+          onClose={() => setShowEdit(false)}
+          onSaved={() => { setShowEdit(false); onMansionsChange() }}
+        />
+      )}
     </div>
   )
 }
