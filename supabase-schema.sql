@@ -1,4 +1,4 @@
-create table mansions (
+create table if not exists mansions (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
   name text not null,
@@ -6,7 +6,7 @@ create table mansions (
   created_at timestamptz default now()
 );
 
-create table tasks (
+create table if not exists tasks (
   id uuid default gen_random_uuid() primary key,
   mansion_id uuid references mansions(id) on delete cascade not null,
   name text not null,
@@ -20,6 +20,17 @@ create table tasks (
 
 alter table mansions enable row level security;
 alter table tasks enable row level security;
+
+-- 既存ポリシーを削除してから再作成（冪等に実行可能）
+drop policy if exists "mansions_select" on mansions;
+drop policy if exists "mansions_insert" on mansions;
+drop policy if exists "mansions_update" on mansions;
+drop policy if exists "mansions_delete" on mansions;
+
+drop policy if exists "tasks_select" on tasks;
+drop policy if exists "tasks_insert" on tasks;
+drop policy if exists "tasks_update" on tasks;
+drop policy if exists "tasks_delete" on tasks;
 
 -- 認証済みユーザーは全物件・全タスクを共有
 create policy "mansions_select" on mansions for select to authenticated using (true);
