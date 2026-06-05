@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from './lib/supabase'
 import Auth from './components/Auth'
 import Sidebar from './components/Sidebar'
-import TaskList from './components/TaskList'
+import MansionDetail from './components/MansionDetail'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -86,7 +86,7 @@ export default function App() {
       />
       <main className="flex-1 overflow-hidden flex flex-col">
         {selectedMansion ? (
-          <TaskList key={selectedMansion.id} mansion={selectedMansion} />
+          <MansionDetail key={selectedMansion.id} mansion={selectedMansion} onMansionsChange={fetchMansions} />
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-400">
             <div className="text-center">

@@ -49,3 +49,36 @@ alter publication supabase_realtime add table tasks;
 
 alter table mansions replica identity full;
 alter table tasks replica identity full;
+
+-- mansionsテーブルに物件詳細カラムを追加
+alter table mansions add column if not exists built_at date;
+alter table mansions add column if not exists total_units integer;
+alter table mansions add column if not exists floors integer;
+alter table mansions add column if not exists manager_name text;
+
+-- 定期業務テーブル
+create table if not exists recurring_tasks (
+  id uuid default gen_random_uuid() primary key,
+  mansion_id uuid references mansions(id) on delete cascade not null,
+  name text not null,
+  frequency text not null default '毎月',
+  months integer[] not null default '{1,2,3,4,5,6,7,8,9,10,11,12}',
+  vendor_cost integer not null default 0,
+  income integer not null default 0,
+  created_at timestamptz default now()
+);
+
+alter table recurring_tasks enable row level security;
+
+drop policy if exists "recurring_tasks_select" on recurring_tasks;
+drop policy if exists "recurring_tasks_insert" on recurring_tasks;
+drop policy if exists "recurring_tasks_update" on recurring_tasks;
+drop policy if exists "recurring_tasks_delete" on recurring_tasks;
+
+create policy "recurring_tasks_select" on recurring_tasks for select to authenticated using (true);
+create policy "recurring_tasks_insert" on recurring_tasks for insert to authenticated with check (true);
+create policy "recurring_tasks_update" on recurring_tasks for update to authenticated using (true);
+create policy "recurring_tasks_delete" on recurring_tasks for delete to authenticated using (true);
+
+alter publication supabase_realtime add table recurring_tasks;
+alter table recurring_tasks replica identity full;

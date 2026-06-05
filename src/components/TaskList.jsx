@@ -109,32 +109,24 @@ export default function TaskList({ mansion }) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ヘッダー */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-gray-800">{mansion.name}</h2>
-              <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse inline-block"></span>
-                リアルタイム
+      <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse inline-block"></span>
+              リアルタイム
+            </span>
+            <span className="text-xs text-gray-400">計 {tasks.length} 件</span>
+            {overdueCount > 0 && (
+              <span className="text-xs text-red-600 font-medium bg-red-50 px-2 py-0.5 rounded-full">
+                期限超過 {overdueCount}件
               </span>
-            </div>
-            {mansion.address && (
-              <p className="text-sm text-gray-500 mt-0.5">{mansion.address}</p>
             )}
-            <div className="flex items-center gap-3 mt-1.5">
-              <span className="text-xs text-gray-400">計 {tasks.length} 件</span>
-              {overdueCount > 0 && (
-                <span className="text-xs text-red-600 font-medium bg-red-50 px-2 py-0.5 rounded-full">
-                  期限超過 {overdueCount}件
-                </span>
-              )}
-              {soonCount > 0 && (
-                <span className="text-xs text-yellow-600 font-medium bg-yellow-50 px-2 py-0.5 rounded-full">
-                  まもなく {soonCount}件
-                </span>
-              )}
-            </div>
+            {soonCount > 0 && (
+              <span className="text-xs text-yellow-600 font-medium bg-yellow-50 px-2 py-0.5 rounded-full">
+                まもなく {soonCount}件
+              </span>
+            )}
           </div>
           <div className="flex gap-2">
             <button
