@@ -127,7 +127,7 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">業者コスト（円/回）</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">業者コスト（円/月）</label>
                 <input
                   type="number"
                   value={vendorCost}
@@ -138,7 +138,7 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">受取金額（円/回）</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">受取金額（円/月）</label>
                 <input
                   type="number"
                   value={income}
