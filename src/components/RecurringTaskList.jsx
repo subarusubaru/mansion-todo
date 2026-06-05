@@ -12,12 +12,12 @@ export default function RecurringTaskList({ mansion }) {
 
   const fetchTasks = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('recurring_tasks')
       .select('*')
       .eq('mansion_id', mansion.id)
       .order('created_at', { ascending: true })
-    if (data) setTasks(data)
+    if (!error && data) setTasks(data)
     setLoading(false)
   }, [mansion.id])
 
