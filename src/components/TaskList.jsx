@@ -109,9 +109,9 @@ export default function TaskList({ mansion }) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ヘッダー */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse inline-block"></span>
               リアルタイム
@@ -128,17 +128,17 @@ export default function TaskList({ mansion }) {
               </span>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={() => exportCsv(mansion.name, tasks)}
               disabled={tasks.length === 0}
-              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 sm:flex-none px-3 py-2 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              CSVエクスポート
+              CSV
             </button>
             <button
               onClick={openAdd}
-              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex-1 sm:flex-none px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
             >
               + タスク追加
             </button>
@@ -146,11 +146,11 @@ export default function TaskList({ mansion }) {
         </div>
 
         {/* フィルター */}
-        <div className="flex gap-2 mt-3 flex-wrap items-center">
+        <div className="flex gap-2 mt-3 overflow-x-auto pb-1 items-center">
           <select
             value={filters.work_step}
             onChange={e => setFilter('work_step', e.target.value)}
-            className="text-sm border border-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+            className="text-sm border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white flex-shrink-0"
           >
             <option value="all">進捗: すべて</option>
             {WORK_STEPS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -159,7 +159,7 @@ export default function TaskList({ mansion }) {
           <select
             value={filters.category}
             onChange={e => setFilter('category', e.target.value)}
-            className="text-sm border border-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+            className="text-sm border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white flex-shrink-0"
           >
             <option value="all">カテゴリ: すべて</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -168,11 +168,11 @@ export default function TaskList({ mansion }) {
           <select
             value={filters.deadline}
             onChange={e => setFilter('deadline', e.target.value)}
-            className="text-sm border border-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+            className="text-sm border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white flex-shrink-0"
           >
             <option value="all">期限: すべて</option>
             <option value="overdue">期限超過</option>
-            <option value="soon">まもなく（90日以内）</option>
+            <option value="soon">まもなく</option>
             <option value="ok">正常</option>
             <option value="none">期限なし</option>
           </select>
@@ -180,7 +180,7 @@ export default function TaskList({ mansion }) {
           {hasFilter && (
             <button
               onClick={resetFilters}
-              className="text-xs text-gray-400 hover:text-gray-600 underline transition-colors"
+              className="text-xs text-gray-400 hover:text-gray-600 underline transition-colors flex-shrink-0 py-2"
             >
               リセット
             </button>

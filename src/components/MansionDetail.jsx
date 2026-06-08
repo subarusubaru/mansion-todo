@@ -38,26 +38,26 @@ export default function MansionDetail({ mansion, onMansionsChange }) {
   return (
     <div className="flex-1 overflow-hidden flex flex-col">
       {/* 物件名・住所・詳細情報 */}
-      <div className="bg-white border-b border-gray-200 px-6 pt-4 pb-0">
-        <div className="flex items-start justify-between mb-2">
-          <div>
-            <h2 className="text-xl font-bold text-gray-800">{mansion.name}</h2>
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 pt-3 md:pt-4 pb-0">
+        <div className="flex items-start justify-between mb-2 gap-2">
+          <div className="min-w-0">
+            <h2 className="text-lg md:text-xl font-bold text-gray-800 truncate">{mansion.name}</h2>
             {mansion.address && (
-              <p className="text-sm text-gray-500 mt-0.5">{mansion.address}</p>
+              <p className="text-xs md:text-sm text-gray-500 mt-0.5 truncate">{mansion.address}</p>
             )}
           </div>
           <button
             onClick={() => setShowEdit(true)}
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors flex-shrink-0 ml-4"
+            className="px-3 py-2 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors flex-shrink-0"
           >
-            物件を編集
+            編集
           </button>
         </div>
 
         {infoItems.length > 0 && (
-          <div className="flex flex-wrap gap-x-5 gap-y-1 mb-3">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
             {infoItems.map(({ label, value }) => (
-              <div key={label} className="text-sm">
+              <div key={label} className="text-xs md:text-sm">
                 <span className="text-gray-400">{label}: </span>
                 <span className="text-gray-700 font-medium">{value}</span>
               </div>

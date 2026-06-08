@@ -79,7 +79,7 @@ export default function TaskForm({ task, mansionId, onClose, onSaved }) {
             </div>
 
             {/* カテゴリ / 進捗 */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">カテゴリ</label>
                 <select
@@ -103,7 +103,7 @@ export default function TaskForm({ task, mansionId, onClose, onSaved }) {
             </div>
 
             {/* 最終実施日 / 周期 */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">最終実施日</label>
                 <input

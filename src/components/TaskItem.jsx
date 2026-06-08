@@ -93,13 +93,13 @@ export default function TaskItem({ task, onEdit, onDelete }) {
             <div className="flex gap-1 flex-shrink-0">
               <button
                 onClick={onEdit}
-                className="text-xs px-2 py-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                className="text-xs px-3 py-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
               >
                 編集
               </button>
               <button
                 onClick={onDelete}
-                className="text-xs px-2 py-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                className="text-xs px-3 py-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
               >
                 削除
               </button>
