@@ -3,12 +3,15 @@ import { supabase } from './lib/supabase'
 import Auth from './components/Auth'
 import Sidebar from './components/Sidebar'
 import MansionDetail from './components/MansionDetail'
+import Dashboard from './components/Dashboard'
+import AnnualSchedule from './components/AnnualSchedule'
 
 export default function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [mansions, setMansions] = useState([])
   const [selectedMansion, setSelectedMansion] = useState(null)
+  const [currentView, setCurrentView] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
@@ -22,6 +25,7 @@ export default function App() {
       if (!session) {
         setMansions([])
         setSelectedMansion(null)
+        setCurrentView('dashboard')
       }
     })
 
@@ -36,9 +40,10 @@ export default function App() {
 
     if (data) {
       setMansions(data)
+      // 選択中の物件データを最新に更新（自動選択はしない）
       setSelectedMansion(prev => {
-        if (prev) return data.find(m => m.id === prev.id) ?? data[0] ?? null
-        return data[0] ?? null
+        if (!prev) return null
+        return data.find(m => m.id === prev.id) ?? null
       })
     }
   }, [])
@@ -49,16 +54,31 @@ export default function App() {
 
   useEffect(() => {
     if (!session) return
-
     const channel = supabase
       .channel('mansions')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'mansions' }, () => {
         fetchMansions()
       })
       .subscribe()
-
     return () => { supabase.removeChannel(channel) }
   }, [session, fetchMansions])
+
+  function selectMansion(mansion) {
+    setSelectedMansion(mansion)
+    setCurrentView(null)
+    setSidebarOpen(false)
+  }
+
+  function changeView(view) {
+    setCurrentView(view)
+    setSelectedMansion(null)
+    setSidebarOpen(false)
+  }
+
+  const mobileTitle =
+    selectedMansion ? selectedMansion.name :
+    currentView === 'dashboard' ? 'ダッシュボード' :
+    currentView === 'schedule'  ? '年間スケジュール' : 'マンション管理'
 
   if (loading) {
     return (
@@ -84,12 +104,7 @@ export default function App() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold">マンション管理</p>
-          {selectedMansion && (
-            <p className="text-xs text-gray-400 truncate">{selectedMansion.name}</p>
-          )}
-        </div>
+        <p className="text-sm font-bold truncate">{mobileTitle}</p>
       </div>
 
       {/* モバイル用オーバーレイ */}
@@ -103,7 +118,9 @@ export default function App() {
       <Sidebar
         mansions={mansions}
         selectedMansion={selectedMansion}
-        onSelect={m => { setSelectedMansion(m); setSidebarOpen(false) }}
+        currentView={currentView}
+        onSelectMansion={selectMansion}
+        onViewChange={changeView}
         onMansionsChange={fetchMansions}
         session={session}
         isOpen={sidebarOpen}
@@ -112,13 +129,18 @@ export default function App() {
 
       <main className="flex-1 overflow-hidden flex flex-col">
         {selectedMansion ? (
-          <MansionDetail key={selectedMansion.id} mansion={selectedMansion} onMansionsChange={fetchMansions} />
+          <MansionDetail
+            key={selectedMansion.id}
+            mansion={selectedMansion}
+            onMansionsChange={fetchMansions}
+          />
+        ) : currentView === 'dashboard' ? (
+          <Dashboard mansions={mansions} onSelectMansion={selectMansion} />
+        ) : currentView === 'schedule' ? (
+          <AnnualSchedule mansions={mansions} />
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-400 p-6">
-            <div className="text-center">
-              <p className="text-base font-medium text-gray-500 mb-1">物件が選択されていません</p>
-              <p className="text-sm">メニューから物件を選択するか、新しく追加してください。</p>
-            </div>
+            <p className="text-sm">メニューから物件を選択してください。</p>
           </div>
         )}
       </main>
