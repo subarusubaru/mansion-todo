@@ -9,21 +9,18 @@ export default function Sidebar({
 }) {
   const [showForm, setShowForm] = useState(false)
   const [editingMansion, setEditingMansion] = useState(null)
-  const [sortMode, setSortMode] = useState('number')
+  const [filterManager, setFilterManager] = useState('')
 
-  const sortedMansions = [...mansions].sort((a, b) => {
-    if (sortMode === 'number') {
+  const managerOptions = [...new Set(mansions.map(m => m.manager_name).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'ja'))
+
+  const sortedMansions = [...mansions]
+    .sort((a, b) => {
       const numA = parseInt(a.name.match(/^\d+/)?.[0] ?? Infinity, 10)
       const numB = parseInt(b.name.match(/^\d+/)?.[0] ?? Infinity, 10)
       return numA - numB
-    }
-    const mA = a.manager_name ?? ''
-    const mB = b.manager_name ?? ''
-    if (!mA && !mB) return 0
-    if (!mA) return 1
-    if (!mB) return -1
-    return mA.localeCompare(mB, 'ja')
-  })
+    })
+    .filter(m => filterManager === '' || m.manager_name === filterManager)
 
   async function handleDelete(mansion) {
     if (!confirm(`「${mansion.name}」を削除しますか？\n関連するタスクも全て削除されます。`)) return
@@ -109,19 +106,9 @@ export default function Sidebar({
 
       {/* 物件リスト */}
       <div className="flex-1 overflow-y-auto p-2">
-        <div className="flex items-center justify-between px-2 py-1.5 mb-1">
-          <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">物件一覧</span>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setSortMode(m => m === 'number' ? 'manager' : 'number')}
-              className="flex items-center gap-0.5 text-xs text-gray-400 hover:text-white px-1.5 py-0.5 rounded hover:bg-gray-700 transition-colors"
-              title={sortMode === 'number' ? '担当者名順に切り替え' : '番号順に切り替え'}
-            >
-              <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-              </svg>
-              {sortMode === 'number' ? '番号順' : '担当者順'}
-            </button>
+        <div className="px-2 py-1.5 mb-1">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">物件一覧</span>
             <button
               onClick={() => { setEditingMansion(null); setShowForm(true) }}
               className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors text-lg leading-none"
@@ -130,6 +117,18 @@ export default function Sidebar({
               +
             </button>
           </div>
+          {managerOptions.length > 0 && (
+            <select
+              value={filterManager}
+              onChange={e => setFilterManager(e.target.value)}
+              className="w-full text-xs bg-gray-800 text-gray-300 border border-gray-600 rounded px-2 py-1 focus:outline-none focus:border-blue-500 cursor-pointer"
+            >
+              <option value="">すべての担当者</option>
+              {managerOptions.map(name => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {mansions.length === 0 && (
