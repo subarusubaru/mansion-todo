@@ -112,7 +112,11 @@ export default function Sidebar({
           </p>
         )}
 
-        {mansions.map(mansion => (
+        {[...mansions].sort((a, b) => {
+          const numA = parseInt(a.name.match(/^\d+/)?.[0] ?? Infinity, 10)
+          const numB = parseInt(b.name.match(/^\d+/)?.[0] ?? Infinity, 10)
+          return numA - numB
+        }).map(mansion => (
           <div
             key={mansion.id}
             className={`group flex items-center justify-between rounded-lg px-3 py-3 cursor-pointer mb-0.5 transition-colors ${
