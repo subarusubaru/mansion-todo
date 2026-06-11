@@ -9,6 +9,21 @@ export default function Sidebar({
 }) {
   const [showForm, setShowForm] = useState(false)
   const [editingMansion, setEditingMansion] = useState(null)
+  const [sortMode, setSortMode] = useState('number')
+
+  const sortedMansions = [...mansions].sort((a, b) => {
+    if (sortMode === 'number') {
+      const numA = parseInt(a.name.match(/^\d+/)?.[0] ?? Infinity, 10)
+      const numB = parseInt(b.name.match(/^\d+/)?.[0] ?? Infinity, 10)
+      return numA - numB
+    }
+    const mA = a.manager_name ?? ''
+    const mB = b.manager_name ?? ''
+    if (!mA && !mB) return 0
+    if (!mA) return 1
+    if (!mB) return -1
+    return mA.localeCompare(mB, 'ja')
+  })
 
   async function handleDelete(mansion) {
     if (!confirm(`「${mansion.name}」を削除しますか？\n関連するタスクも全て削除されます。`)) return
@@ -96,13 +111,25 @@ export default function Sidebar({
       <div className="flex-1 overflow-y-auto p-2">
         <div className="flex items-center justify-between px-2 py-1.5 mb-1">
           <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">物件一覧</span>
-          <button
-            onClick={() => { setEditingMansion(null); setShowForm(true) }}
-            className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors text-lg leading-none"
-            title="物件を追加"
-          >
-            +
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setSortMode(m => m === 'number' ? 'manager' : 'number')}
+              className="flex items-center gap-0.5 text-xs text-gray-400 hover:text-white px-1.5 py-0.5 rounded hover:bg-gray-700 transition-colors"
+              title={sortMode === 'number' ? '担当者名順に切り替え' : '番号順に切り替え'}
+            >
+              <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+              </svg>
+              {sortMode === 'number' ? '番号順' : '担当者順'}
+            </button>
+            <button
+              onClick={() => { setEditingMansion(null); setShowForm(true) }}
+              className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors text-lg leading-none"
+              title="物件を追加"
+            >
+              +
+            </button>
+          </div>
         </div>
 
         {mansions.length === 0 && (
@@ -112,11 +139,7 @@ export default function Sidebar({
           </p>
         )}
 
-        {[...mansions].sort((a, b) => {
-          const numA = parseInt(a.name.match(/^\d+/)?.[0] ?? Infinity, 10)
-          const numB = parseInt(b.name.match(/^\d+/)?.[0] ?? Infinity, 10)
-          return numA - numB
-        }).map(mansion => (
+        {sortedMansions.map(mansion => (
           <div
             key={mansion.id}
             className={`group flex items-center justify-between rounded-lg px-3 py-3 cursor-pointer mb-0.5 transition-colors ${
