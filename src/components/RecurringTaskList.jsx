@@ -4,6 +4,34 @@ import RecurringTaskForm from './RecurringTaskForm'
 
 const MONTH_SHORT = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
 
+// months が空配列のとき頻度から年間回数・月あたり倍率を算出する
+const FREQ_MAP = {
+  '毎月':   { annualCount: 12, perMonth: 1 },
+  '月2回':  { annualCount: 24, perMonth: 2 },
+  '月3回':  { annualCount: 36, perMonth: 3 },
+  '週1回':  { annualCount: 48, perMonth: 4 },
+  '週2回':  { annualCount: 96, perMonth: 8 },
+  '年1回':  { annualCount: 1,  perMonth: 1 / 12 },
+  '年2回':  { annualCount: 2,  perMonth: 2 / 12 },
+  '年4回':  { annualCount: 4,  perMonth: 4 / 12 },
+  '年6回':  { annualCount: 6,  perMonth: 6 / 12 },
+}
+
+function annualCountFor(task) {
+  if (task.months.length > 0) return task.months.length
+  return FREQ_MAP[task.frequency]?.annualCount ?? 0
+}
+
+function monthlyCostFor(task) {
+  if (task.months.length > 0) return null // caller uses months.includes()
+  return Math.round((FREQ_MAP[task.frequency]?.perMonth ?? 0) * task.vendor_cost)
+}
+
+function monthlyIncomeFor(task) {
+  if (task.months.length > 0) return null
+  return Math.round((FREQ_MAP[task.frequency]?.perMonth ?? 0) * task.income)
+}
+
 export default function RecurringTaskList({ mansion }) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -32,15 +60,23 @@ export default function RecurringTaskList({ mansion }) {
   function openAdd() { setEditingTask(null); setShowForm(true) }
   function openEdit(task) { setEditingTask(task); setShowForm(true) }
 
-  const annualCost = tasks.reduce((sum, t) => sum + t.vendor_cost * t.months.length, 0)
-  const annualIncome = tasks.reduce((sum, t) => sum + t.income * t.months.length, 0)
+  const annualCost = tasks.reduce((sum, t) => sum + t.vendor_cost * annualCountFor(t), 0)
+  const annualIncome = tasks.reduce((sum, t) => sum + t.income * annualCountFor(t), 0)
   const annualProfit = annualIncome - annualCost
 
   const monthlyCosts = Array.from({ length: 12 }, (_, i) =>
-    tasks.reduce((sum, t) => t.months.includes(i + 1) ? sum + t.vendor_cost : sum, 0)
+    tasks.reduce((sum, t) => {
+      const fixed = monthlyCostFor(t)
+      if (fixed !== null) return sum + fixed
+      return t.months.includes(i + 1) ? sum + t.vendor_cost : sum
+    }, 0)
   )
   const monthlyIncomes = Array.from({ length: 12 }, (_, i) =>
-    tasks.reduce((sum, t) => t.months.includes(i + 1) ? sum + t.income : sum, 0)
+    tasks.reduce((sum, t) => {
+      const fixed = monthlyIncomeFor(t)
+      if (fixed !== null) return sum + fixed
+      return t.months.includes(i + 1) ? sum + t.income : sum
+    }, 0)
   )
 
   return (
@@ -101,9 +137,11 @@ export default function RecurringTaskList({ mansion }) {
                 </thead>
                 <tbody>
                   {tasks.map((task, idx) => {
-                    const tCost = task.vendor_cost * task.months.length
-                    const tIncome = task.income * task.months.length
+                    const count = annualCountFor(task)
+                    const tCost = task.vendor_cost * count
+                    const tIncome = task.income * count
                     const tProfit = tIncome - tCost
+                    const noMonth = task.months.length === 0
                     return (
                       <tr
                         key={task.id}
@@ -113,7 +151,7 @@ export default function RecurringTaskList({ mansion }) {
                           <div className="font-medium text-gray-800 whitespace-nowrap">{task.name}</div>
                           <div className="text-xs text-gray-400 flex items-center gap-1.5">
                             <span>{task.frequency}</span>
-                            {task.months.length === 0 && (
+                            {noMonth && (
                               <span className="px-1 py-0.5 bg-gray-100 text-gray-400 rounded text-xs">実施月未設定</span>
                             )}
                           </div>
@@ -123,7 +161,7 @@ export default function RecurringTaskList({ mansion }) {
                         </td>
                         {Array.from({ length: 12 }, (_, i) => (
                           <td key={i} className="text-center px-1.5 py-2.5">
-                            {task.months.includes(i + 1) ? (
+                            {!noMonth && task.months.includes(i + 1) ? (
                               <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-600 rounded-full text-xs font-bold">
                                 ✓
                               </span>

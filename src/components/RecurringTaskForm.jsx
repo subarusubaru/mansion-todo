@@ -5,6 +5,18 @@ const FREQUENCY_OPTIONS = ['毎月', '月2回', '月3回', '週1回', '週2回',
 const ALL_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 const MONTH_LABELS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
 
+const FREQ_MAP = {
+  '毎月':  { annualCount: 12 },
+  '月2回': { annualCount: 24 },
+  '月3回': { annualCount: 36 },
+  '週1回': { annualCount: 48 },
+  '週2回': { annualCount: 96 },
+  '年1回': { annualCount: 1 },
+  '年2回': { annualCount: 2 },
+  '年4回': { annualCount: 4 },
+  '年6回': { annualCount: 6 },
+}
+
 export default function RecurringTaskForm({ task, mansionId, onClose, onSaved }) {
   const [name, setName] = useState(task?.name ?? '')
   const [vendorName, setVendorName] = useState(task?.vendor_name ?? '')
@@ -30,8 +42,10 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
   const costNum = parseInt(vendorCost) || 0
   const incomeNum = parseInt(income) || 0
   const profit = incomeNum - costNum
-  const annualCost = costNum * effectiveMonths.length
-  const annualIncome = incomeNum * effectiveMonths.length
+  const freqAnnualCount = noMonth ? (FREQ_MAP[frequency]?.annualCount ?? 0) : null
+  const annualCount = freqAnnualCount !== null ? freqAnnualCount : effectiveMonths.length
+  const annualCost = costNum * annualCount
+  const annualIncome = incomeNum * annualCount
   const annualProfit = annualIncome - annualCost
 
   async function handleSubmit(e) {
@@ -186,17 +200,22 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
                 </span>
               </div>
               <div className="flex justify-between text-gray-500">
-                <span>年間コスト合計（{noMonth ? '実施月未設定' : `${effectiveMonths.length}回`}）</span>
-                <span>{noMonth ? '—' : `${annualCost.toLocaleString()}円`}</span>
+                <span>
+                  年間コスト合計
+                  {noMonth && freqAnnualCount != null
+                    ? `（${frequency}・年${freqAnnualCount}回）`
+                    : `（${effectiveMonths.length}回）`}
+                </span>
+                <span>{annualCost > 0 || annualCount > 0 ? `${annualCost.toLocaleString()}円` : '—'}</span>
               </div>
               <div className="flex justify-between text-gray-500">
                 <span>年間受取合計</span>
-                <span>{noMonth ? '—' : `${annualIncome.toLocaleString()}円`}</span>
+                <span>{annualIncome > 0 || annualCount > 0 ? `${annualIncome.toLocaleString()}円` : '—'}</span>
               </div>
               <div className="flex justify-between border-t border-gray-200 pt-1.5 font-medium">
                 <span className="text-gray-700">年間利益</span>
-                <span className={noMonth ? 'text-gray-400' : annualProfit >= 0 ? 'text-green-600' : 'text-red-600'}>
-                  {noMonth ? '—' : `${annualProfit.toLocaleString()}円`}
+                <span className={annualCount === 0 ? 'text-gray-400' : annualProfit >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  {annualCount === 0 ? '—' : `${annualProfit.toLocaleString()}円`}
                 </span>
               </div>
             </div>
