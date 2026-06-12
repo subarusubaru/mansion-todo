@@ -111,7 +111,12 @@ export default function RecurringTaskList({ mansion }) {
                       >
                         <td className={`px-4 py-2.5 sticky left-0 ${idx % 2 === 1 ? 'bg-gray-50' : 'bg-white'}`}>
                           <div className="font-medium text-gray-800 whitespace-nowrap">{task.name}</div>
-                          <div className="text-xs text-gray-400">{task.frequency}</div>
+                          <div className="text-xs text-gray-400 flex items-center gap-1.5">
+                            <span>{task.frequency}</span>
+                            {task.months.length === 0 && (
+                              <span className="px-1 py-0.5 bg-gray-100 text-gray-400 rounded text-xs">実施月未設定</span>
+                            )}
+                          </div>
                           {task.vendor_name && (
                             <div className="text-xs text-blue-500 whitespace-nowrap">{task.vendor_name}</div>
                           )}

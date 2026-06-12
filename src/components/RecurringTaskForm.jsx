@@ -9,7 +9,8 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
   const [name, setName] = useState(task?.name ?? '')
   const [vendorName, setVendorName] = useState(task?.vendor_name ?? '')
   const [frequency, setFrequency] = useState(task?.frequency ?? '毎月')
-  const [months, setMonths] = useState(task?.months ?? ALL_MONTHS)
+  const [months, setMonths] = useState(task?.months?.length > 0 ? task.months : ALL_MONTHS)
+  const [noMonth, setNoMonth] = useState(Array.isArray(task?.months) && task.months.length === 0)
   const [vendorCost, setVendorCost] = useState(task?.vendor_cost ?? '')
   const [income, setIncome] = useState(task?.income ?? '')
   const [loading, setLoading] = useState(false)
@@ -25,16 +26,17 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
     )
   }
 
+  const effectiveMonths = noMonth ? [] : months
   const costNum = parseInt(vendorCost) || 0
   const incomeNum = parseInt(income) || 0
   const profit = incomeNum - costNum
-  const annualCost = costNum * months.length
-  const annualIncome = incomeNum * months.length
+  const annualCost = costNum * effectiveMonths.length
+  const annualIncome = incomeNum * effectiveMonths.length
   const annualProfit = annualIncome - annualCost
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (months.length === 0) { setError('実施月を1つ以上選択してください。'); return }
+    if (!noMonth && months.length === 0) { setError('実施月を1つ以上選択してください。'); return }
     setLoading(true)
     setError('')
 
@@ -42,7 +44,7 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
       name,
       vendor_name: vendorName || null,
       frequency,
-      months,
+      months: effectiveMonths,
       vendor_cost: costNum,
       income: incomeNum,
     }
@@ -56,6 +58,8 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
     }
     onSaved()
   }
+
+  const monthButtonsDisabled = frequency === '毎月' || noMonth
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
@@ -109,13 +113,24 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                実施月
-                {frequency !== '毎月' && (
-                  <span className="ml-2 text-xs text-gray-400">{months.length}ヶ月選択中</span>
-                )}
-              </label>
-              <div className="grid grid-cols-6 gap-1.5">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-700">
+                  実施月
+                  {!noMonth && frequency !== '毎月' && (
+                    <span className="ml-2 text-xs text-gray-400">{months.length}ヶ月選択中</span>
+                  )}
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={noMonth}
+                    onChange={e => setNoMonth(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-xs text-gray-500">実施月なし（頻度のみ管理）</span>
+                </label>
+              </div>
+              <div className={`grid grid-cols-6 gap-1.5 ${noMonth ? 'opacity-40 pointer-events-none' : ''}`}>
                 {MONTH_LABELS.map((label, i) => {
                   const m = i + 1
                   const selected = months.includes(m)
@@ -123,13 +138,13 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
                     <button
                       key={m}
                       type="button"
-                      disabled={frequency === '毎月'}
+                      disabled={monthButtonsDisabled}
                       onClick={() => toggleMonth(m)}
                       className={`py-1.5 text-xs rounded-lg border transition-colors ${
                         selected
                           ? 'bg-blue-600 text-white border-blue-600'
                           : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
-                      } ${frequency === '毎月' ? 'opacity-60 cursor-default' : 'cursor-pointer'}`}
+                      } ${monthButtonsDisabled ? 'cursor-default' : 'cursor-pointer'}`}
                     >
                       {label}
                     </button>
@@ -171,17 +186,17 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
                 </span>
               </div>
               <div className="flex justify-between text-gray-500">
-                <span>年間コスト合計（{months.length}回）</span>
-                <span>{annualCost.toLocaleString()}円</span>
+                <span>年間コスト合計（{noMonth ? '実施月未設定' : `${effectiveMonths.length}回`}）</span>
+                <span>{noMonth ? '—' : `${annualCost.toLocaleString()}円`}</span>
               </div>
               <div className="flex justify-between text-gray-500">
                 <span>年間受取合計</span>
-                <span>{annualIncome.toLocaleString()}円</span>
+                <span>{noMonth ? '—' : `${annualIncome.toLocaleString()}円`}</span>
               </div>
               <div className="flex justify-between border-t border-gray-200 pt-1.5 font-medium">
                 <span className="text-gray-700">年間利益</span>
-                <span className={annualProfit >= 0 ? 'text-green-600' : 'text-red-600'}>
-                  {annualProfit.toLocaleString()}円
+                <span className={noMonth ? 'text-gray-400' : annualProfit >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  {noMonth ? '—' : `${annualProfit.toLocaleString()}円`}
                 </span>
               </div>
             </div>
