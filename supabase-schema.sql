@@ -82,3 +82,6 @@ create policy "recurring_tasks_delete" on recurring_tasks for delete to authenti
 
 alter publication supabase_realtime add table recurring_tasks;
 alter table recurring_tasks replica identity full;
+
+-- recurring_tasksテーブルに業者名カラムを追加
+alter table recurring_tasks add column if not exists vendor_name text;

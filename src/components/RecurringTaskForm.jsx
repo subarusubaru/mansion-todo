@@ -7,6 +7,7 @@ const MONTH_LABELS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8
 
 export default function RecurringTaskForm({ task, mansionId, onClose, onSaved }) {
   const [name, setName] = useState(task?.name ?? '')
+  const [vendorName, setVendorName] = useState(task?.vendor_name ?? '')
   const [frequency, setFrequency] = useState(task?.frequency ?? '毎月')
   const [months, setMonths] = useState(task?.months ?? ALL_MONTHS)
   const [vendorCost, setVendorCost] = useState(task?.vendor_cost ?? '')
@@ -39,6 +40,7 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
 
     const payload = {
       name,
+      vendor_name: vendorName || null,
       frequency,
       months,
       vendor_cost: costNum,
@@ -81,6 +83,17 @@ export default function RecurringTaskForm({ task, mansionId, onClose, onSaved })
                 required
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="例: 共用部清掃"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">業者名</label>
+              <input
+                type="text"
+                value={vendorName}
+                onChange={e => setVendorName(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="例: ○○清掃株式会社"
               />
             </div>
 
