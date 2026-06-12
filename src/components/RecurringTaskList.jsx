@@ -4,34 +4,6 @@ import RecurringTaskForm from './RecurringTaskForm'
 
 const MONTH_SHORT = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
 
-// months が空配列のとき頻度から年間回数・月あたり倍率を算出する
-const FREQ_MAP = {
-  '毎月':   { annualCount: 12, perMonth: 1 },
-  '月2回':  { annualCount: 24, perMonth: 2 },
-  '月3回':  { annualCount: 36, perMonth: 3 },
-  '週1回':  { annualCount: 48, perMonth: 4 },
-  '週2回':  { annualCount: 96, perMonth: 8 },
-  '年1回':  { annualCount: 1,  perMonth: 1 / 12 },
-  '年2回':  { annualCount: 2,  perMonth: 2 / 12 },
-  '年4回':  { annualCount: 4,  perMonth: 4 / 12 },
-  '年6回':  { annualCount: 6,  perMonth: 6 / 12 },
-}
-
-function annualCountFor(task) {
-  if (task.months.length > 0) return task.months.length
-  return FREQ_MAP[task.frequency]?.annualCount ?? 0
-}
-
-function monthlyCostFor(task) {
-  if (task.months.length > 0) return null // caller uses months.includes()
-  return Math.round((FREQ_MAP[task.frequency]?.perMonth ?? 0) * task.vendor_cost)
-}
-
-function monthlyIncomeFor(task) {
-  if (task.months.length > 0) return null
-  return Math.round((FREQ_MAP[task.frequency]?.perMonth ?? 0) * task.income)
-}
-
 export default function RecurringTaskList({ mansion }) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -60,24 +32,15 @@ export default function RecurringTaskList({ mansion }) {
   function openAdd() { setEditingTask(null); setShowForm(true) }
   function openEdit(task) { setEditingTask(task); setShowForm(true) }
 
-  const annualCost = tasks.reduce((sum, t) => sum + t.vendor_cost * annualCountFor(t), 0)
-  const annualIncome = tasks.reduce((sum, t) => sum + t.income * annualCountFor(t), 0)
+  // vendor_cost / income はいずれも「円/月」の単位なので、全業務を毎月加算し年間は×12
+  const monthlyRate = tasks.reduce((sum, t) => sum + t.vendor_cost, 0)
+  const monthlyIncomeRate = tasks.reduce((sum, t) => sum + t.income, 0)
+  const annualCost = monthlyRate * 12
+  const annualIncome = monthlyIncomeRate * 12
   const annualProfit = annualIncome - annualCost
 
-  const monthlyCosts = Array.from({ length: 12 }, (_, i) =>
-    tasks.reduce((sum, t) => {
-      const fixed = monthlyCostFor(t)
-      if (fixed !== null) return sum + fixed
-      return t.months.includes(i + 1) ? sum + t.vendor_cost : sum
-    }, 0)
-  )
-  const monthlyIncomes = Array.from({ length: 12 }, (_, i) =>
-    tasks.reduce((sum, t) => {
-      const fixed = monthlyIncomeFor(t)
-      if (fixed !== null) return sum + fixed
-      return t.months.includes(i + 1) ? sum + t.income : sum
-    }, 0)
-  )
+  const monthlyCosts = Array(12).fill(monthlyRate)
+  const monthlyIncomes = Array(12).fill(monthlyIncomeRate)
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -137,9 +100,8 @@ export default function RecurringTaskList({ mansion }) {
                 </thead>
                 <tbody>
                   {tasks.map((task, idx) => {
-                    const count = annualCountFor(task)
-                    const tCost = task.vendor_cost * count
-                    const tIncome = task.income * count
+                    const tCost = task.vendor_cost * 12
+                    const tIncome = task.income * 12
                     const tProfit = tIncome - tCost
                     const noMonth = task.months.length === 0
                     return (
