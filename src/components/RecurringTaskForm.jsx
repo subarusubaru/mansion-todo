@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-const FREQUENCY_OPTIONS = ['毎月', '月2回', '月3回', '週1回', '週2回', '年2回', '年4回', '年6回', '特定月のみ', '任意設定']
+const FREQUENCY_OPTIONS = ['毎月', '月2回', '月3回', '週1回', '週2回', '年1回', '年2回', '年4回', '年6回', '特定月のみ', '任意設定']
 const ALL_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 const MONTH_LABELS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
 
