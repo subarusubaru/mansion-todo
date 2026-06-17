@@ -85,3 +85,31 @@ alter table recurring_tasks replica identity full;
 
 -- recurring_tasksテーブルに業者名カラムを追加
 alter table recurring_tasks add column if not exists vendor_name text;
+
+-- 定期業務細目テーブル
+create table if not exists recurring_task_items (
+  id uuid default gen_random_uuid() primary key,
+  recurring_task_id uuid references recurring_tasks(id) on delete cascade not null,
+  name text not null,
+  frequency text not null default '毎月',
+  months integer[] not null default '{}',
+  vendor_cost integer not null default 0,
+  income integer not null default 0,
+  sort_order integer not null default 0,
+  created_at timestamptz default now()
+);
+
+alter table recurring_task_items enable row level security;
+
+drop policy if exists "recurring_task_items_select" on recurring_task_items;
+drop policy if exists "recurring_task_items_insert" on recurring_task_items;
+drop policy if exists "recurring_task_items_update" on recurring_task_items;
+drop policy if exists "recurring_task_items_delete" on recurring_task_items;
+
+create policy "recurring_task_items_select" on recurring_task_items for select to authenticated using (true);
+create policy "recurring_task_items_insert" on recurring_task_items for insert to authenticated with check (true);
+create policy "recurring_task_items_update" on recurring_task_items for update to authenticated using (true);
+create policy "recurring_task_items_delete" on recurring_task_items for delete to authenticated using (true);
+
+alter publication supabase_realtime add table recurring_task_items;
+alter table recurring_task_items replica identity full;

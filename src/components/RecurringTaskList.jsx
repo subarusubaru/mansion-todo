@@ -4,6 +4,24 @@ import RecurringTaskForm from './RecurringTaskForm'
 
 const MONTH_SHORT = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
 
+const FREQ_MAP = {
+  '毎月':  { annualCount: 12 },
+  '月2回': { annualCount: 24 },
+  '月3回': { annualCount: 36 },
+  '週1回': { annualCount: 48 },
+  '週2回': { annualCount: 96 },
+  '年1回': { annualCount: 1 },
+  '年2回': { annualCount: 2 },
+  '年4回': { annualCount: 4 },
+  '年6回': { annualCount: 6 },
+}
+
+function itemAnnualCount(item) {
+  const noMonth = !item.months || item.months.length === 0
+  if (noMonth) return FREQ_MAP[item.frequency]?.annualCount ?? 0
+  return item.months.length
+}
+
 export default function RecurringTaskList({ mansion }) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -14,10 +32,15 @@ export default function RecurringTaskList({ mansion }) {
     setLoading(true)
     const { data, error } = await supabase
       .from('recurring_tasks')
-      .select('*')
+      .select('*, recurring_task_items(*)')
       .eq('mansion_id', mansion.id)
       .order('created_at', { ascending: true })
-    if (!error && data) setTasks(data)
+    if (!error && data) {
+      setTasks(data.map(t => ({
+        ...t,
+        recurring_task_items: (t.recurring_task_items || []).sort((a, b) => a.sort_order - b.sort_order),
+      })))
+    }
     setLoading(false)
   }, [mansion.id])
 
@@ -32,15 +55,37 @@ export default function RecurringTaskList({ mansion }) {
   function openAdd() { setEditingTask(null); setShowForm(true) }
   function openEdit(task) { setEditingTask(task); setShowForm(true) }
 
-  // vendor_cost / income はいずれも「円/月」の単位なので、全業務を毎月加算し年間は×12
-  const monthlyRate = tasks.reduce((sum, t) => sum + t.vendor_cost, 0)
-  const monthlyIncomeRate = tasks.reduce((sum, t) => sum + t.income, 0)
-  const annualCost = monthlyRate * 12
-  const annualIncome = monthlyIncomeRate * 12
-  const annualProfit = annualIncome - annualCost
+  // Global annual and per-month totals
+  let totalAnnualCost = 0, totalAnnualIncome = 0
+  const monthlyCosts = Array(12).fill(0)
+  const monthlyIncomes = Array(12).fill(0)
 
-  const monthlyCosts = Array(12).fill(monthlyRate)
-  const monthlyIncomes = Array(12).fill(monthlyIncomeRate)
+  for (const task of tasks) {
+    const items = task.recurring_task_items || []
+    if (items.length > 0) {
+      for (const item of items) {
+        const cnt = itemAnnualCount(item)
+        totalAnnualCost += item.vendor_cost * cnt
+        totalAnnualIncome += item.income * cnt
+        if (item.months && item.months.length > 0) {
+          for (const m of item.months) {
+            monthlyCosts[m - 1] += item.vendor_cost
+            monthlyIncomes[m - 1] += item.income
+          }
+        }
+      }
+    } else {
+      totalAnnualCost += task.vendor_cost * 12
+      totalAnnualIncome += task.income * 12
+      for (let i = 0; i < 12; i++) {
+        if (task.months.length === 0 || task.months.includes(i + 1)) {
+          monthlyCosts[i] += task.vendor_cost
+          monthlyIncomes[i] += task.income
+        }
+      }
+    }
+  }
+  const totalAnnualProfit = totalAnnualIncome - totalAnnualCost
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -49,16 +94,16 @@ export default function RecurringTaskList({ mansion }) {
         <div className="flex gap-6 text-sm">
           <div>
             <span className="text-gray-400">年間コスト</span>
-            <span className="ml-2 font-semibold text-gray-800">{annualCost.toLocaleString()}円</span>
+            <span className="ml-2 font-semibold text-gray-800">{totalAnnualCost.toLocaleString()}円</span>
           </div>
           <div>
             <span className="text-gray-400">年間受取</span>
-            <span className="ml-2 font-semibold text-gray-800">{annualIncome.toLocaleString()}円</span>
+            <span className="ml-2 font-semibold text-gray-800">{totalAnnualIncome.toLocaleString()}円</span>
           </div>
           <div>
             <span className="text-gray-400">年間利益</span>
-            <span className={`ml-2 font-bold ${annualProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {annualProfit.toLocaleString()}円
+            <span className={`ml-2 font-bold ${totalAnnualProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {totalAnnualProfit.toLocaleString()}円
             </span>
           </div>
         </div>
@@ -99,17 +144,121 @@ export default function RecurringTaskList({ mansion }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {tasks.map((task, idx) => {
+                  {tasks.flatMap((task) => {
+                    const items = task.recurring_task_items || []
+                    const hasItems = items.length > 0
+                    const noMonth = task.months.length === 0
+
+                    if (hasItems) {
+                      // Aggregate costs from items
+                      let taskAnnualCost = 0, taskAnnualIncome = 0
+                      for (const item of items) {
+                        const cnt = itemAnnualCount(item)
+                        taskAnnualCost += item.vendor_cost * cnt
+                        taskAnnualIncome += item.income * cnt
+                      }
+                      const taskAnnualProfit = taskAnnualIncome - taskAnnualCost
+
+                      return [
+                        // Group header row
+                        <tr key={`task-${task.id}`} className="border-b border-gray-200 bg-gray-50">
+                          <td className="px-4 py-2 sticky left-0 bg-gray-50">
+                            <div className="font-semibold text-gray-700 whitespace-nowrap">{task.name}</div>
+                            {task.vendor_name && (
+                              <div className="text-xs text-blue-500 whitespace-nowrap">{task.vendor_name}</div>
+                            )}
+                          </td>
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <td key={i} className="px-1.5 py-2" />
+                          ))}
+                          <td className="text-right px-3 py-2 text-gray-600 font-medium whitespace-nowrap text-xs">
+                            {taskAnnualCost.toLocaleString()}
+                          </td>
+                          <td className="text-right px-3 py-2 text-gray-600 font-medium whitespace-nowrap text-xs">
+                            {taskAnnualIncome.toLocaleString()}
+                          </td>
+                          <td className={`text-right px-3 py-2 font-semibold whitespace-nowrap text-xs ${taskAnnualProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {taskAnnualProfit.toLocaleString()}
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => openEdit(task)}
+                                className="text-xs px-2 py-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              >
+                                編集
+                              </button>
+                              <button
+                                onClick={() => handleDelete(task.id)}
+                                className="text-xs px-2 py-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                              >
+                                削除
+                              </button>
+                            </div>
+                          </td>
+                        </tr>,
+                        // Item rows
+                        ...items.map((item, itemIdx) => {
+                          const noMonthItem = !item.months || item.months.length === 0
+                          const cnt = itemAnnualCount(item)
+                          const itemAnnualCost = item.vendor_cost * cnt
+                          const itemAnnualIncome = item.income * cnt
+                          const itemAnnualProfit = itemAnnualIncome - itemAnnualCost
+                          const isLastItem = itemIdx === items.length - 1
+
+                          return (
+                            <tr
+                              key={`item-${item.id}`}
+                              className={`border-b ${isLastItem ? 'border-gray-300' : 'border-gray-100'} bg-white hover:bg-blue-50`}
+                            >
+                              <td className="px-4 py-2 sticky left-0 bg-white">
+                                <div className="flex items-start gap-1.5">
+                                  <span className="text-gray-300 text-xs mt-0.5 flex-shrink-0">└</span>
+                                  <div>
+                                    <div className="text-gray-700 whitespace-nowrap">{item.name}</div>
+                                    <div className="text-xs text-gray-400 flex items-center gap-1">
+                                      <span>{item.frequency}</span>
+                                      {noMonthItem && (
+                                        <span className="px-1 py-0.5 bg-gray-100 text-gray-400 rounded">実施月未設定</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              {Array.from({ length: 12 }, (_, i) => (
+                                <td key={i} className="text-center px-1.5 py-2">
+                                  {!noMonthItem && item.months.includes(i + 1) ? (
+                                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-600 rounded-full text-xs font-bold">
+                                      ✓
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-200 text-xs">–</span>
+                                  )}
+                                </td>
+                              ))}
+                              <td className="text-right px-3 py-2 text-gray-600 whitespace-nowrap">
+                                {itemAnnualCost.toLocaleString()}
+                              </td>
+                              <td className="text-right px-3 py-2 text-gray-600 whitespace-nowrap">
+                                {itemAnnualIncome.toLocaleString()}
+                              </td>
+                              <td className={`text-right px-3 py-2 font-medium whitespace-nowrap ${itemAnnualProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {itemAnnualProfit.toLocaleString()}
+                              </td>
+                              <td className="px-3 py-2" />
+                            </tr>
+                          )
+                        }),
+                      ]
+                    }
+
+                    // No items: single task row (backward compat)
                     const tCost = task.vendor_cost * 12
                     const tIncome = task.income * 12
                     const tProfit = tIncome - tCost
-                    const noMonth = task.months.length === 0
-                    return (
-                      <tr
-                        key={task.id}
-                        className={`border-b border-gray-100 ${idx % 2 === 1 ? 'bg-gray-50' : 'bg-white'}`}
-                      >
-                        <td className={`px-4 py-2.5 sticky left-0 ${idx % 2 === 1 ? 'bg-gray-50' : 'bg-white'}`}>
+                    return [
+                      <tr key={task.id} className="border-b border-gray-100 bg-white hover:bg-gray-50">
+                        <td className="px-4 py-2.5 sticky left-0 bg-white">
                           <div className="font-medium text-gray-800 whitespace-nowrap">{task.name}</div>
                           <div className="text-xs text-gray-400 flex items-center gap-1.5">
                             <span>{task.frequency}</span>
@@ -157,8 +306,8 @@ export default function RecurringTaskList({ mansion }) {
                             </button>
                           </div>
                         </td>
-                      </tr>
-                    )
+                      </tr>,
+                    ]
                   })}
                 </tbody>
                 <tfoot className="border-t-2 border-gray-300">
