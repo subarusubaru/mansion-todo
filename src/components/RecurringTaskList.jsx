@@ -124,23 +124,30 @@ export default function RecurringTaskList({ mansion }) {
             「+ 定期業務追加」から定期業務を登録してください。
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm border-collapse">
+          <div className="bg-white rounded-xl border border-gray-200">
+            <table className="w-full text-sm border-collapse table-fixed">
+                <colgroup>
+                  <col className="w-40" />
+                  {Array.from({ length: 12 }, (_, i) => <col key={i} className="w-10" />)}
+                  <col className="w-20" />
+                  <col className="w-20" />
+                  <col className="w-20" />
+                  <col className="w-16" />
+                </colgroup>
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left px-4 py-2.5 font-medium text-gray-600 min-w-[160px] sticky left-0 bg-gray-50">
+                    <th className="sticky top-0 z-10 text-left px-3 py-2.5 font-medium text-gray-600 bg-gray-50">
                       業務名
                     </th>
                     {MONTH_SHORT.map(m => (
-                      <th key={m} className="text-center px-1.5 py-2.5 font-medium text-gray-500 w-8">
+                      <th key={m} className="sticky top-0 z-10 text-center py-2.5 font-medium text-gray-500 bg-gray-50 text-xs">
                         {m}月
                       </th>
                     ))}
-                    <th className="text-right px-3 py-2.5 font-medium text-gray-600 whitespace-nowrap">年コスト</th>
-                    <th className="text-right px-3 py-2.5 font-medium text-gray-600 whitespace-nowrap">年受取</th>
-                    <th className="text-right px-3 py-2.5 font-medium text-gray-600 whitespace-nowrap">年利益</th>
-                    <th className="px-3 py-2.5 w-20"></th>
+                    <th className="sticky top-0 z-10 text-right px-2 py-2.5 font-medium text-gray-600 bg-gray-50 text-xs">年コスト</th>
+                    <th className="sticky top-0 z-10 text-right px-2 py-2.5 font-medium text-gray-600 bg-gray-50 text-xs">年受取</th>
+                    <th className="sticky top-0 z-10 text-right px-2 py-2.5 font-medium text-gray-600 bg-gray-50 text-xs">年利益</th>
+                    <th className="sticky top-0 z-10 bg-gray-50"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -162,22 +169,22 @@ export default function RecurringTaskList({ mansion }) {
                       return [
                         // Group header row
                         <tr key={`task-${task.id}`} className="border-b border-gray-200 bg-gray-50">
-                          <td className="px-4 py-2 sticky left-0 bg-gray-50">
-                            <div className="font-semibold text-gray-700 whitespace-nowrap">{task.name}</div>
+                          <td className="px-3 py-2">
+                            <div className="font-semibold text-gray-700 truncate">{task.name}</div>
                             {task.vendor_name && (
-                              <div className="text-xs text-blue-500 whitespace-nowrap">{task.vendor_name}</div>
+                              <div className="text-xs text-blue-500 truncate">{task.vendor_name}</div>
                             )}
                           </td>
                           {Array.from({ length: 12 }, (_, i) => (
                             <td key={i} className="px-1.5 py-2" />
                           ))}
-                          <td className="text-right px-3 py-2 text-gray-600 font-medium whitespace-nowrap text-xs">
+                          <td className="text-right px-2 py-2 text-gray-600 font-medium text-xs truncate">
                             {taskAnnualCost.toLocaleString()}
                           </td>
-                          <td className="text-right px-3 py-2 text-gray-600 font-medium whitespace-nowrap text-xs">
+                          <td className="text-right px-2 py-2 text-gray-600 font-medium text-xs truncate">
                             {taskAnnualIncome.toLocaleString()}
                           </td>
-                          <td className={`text-right px-3 py-2 font-semibold whitespace-nowrap text-xs ${taskAnnualProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          <td className={`text-right px-2 py-2 font-semibold text-xs truncate ${taskAnnualProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                             {taskAnnualProfit.toLocaleString()}
                           </td>
                           <td className="px-3 py-2">
@@ -211,15 +218,15 @@ export default function RecurringTaskList({ mansion }) {
                               key={`item-${item.id}`}
                               className={`border-b ${isLastItem ? 'border-gray-300' : 'border-gray-100'} bg-white hover:bg-blue-50`}
                             >
-                              <td className="px-4 py-2 sticky left-0 bg-white">
-                                <div className="flex items-start gap-1.5">
+                              <td className="px-3 py-2">
+                                <div className="flex items-start gap-1">
                                   <span className="text-gray-300 text-xs mt-0.5 flex-shrink-0">└</span>
-                                  <div>
-                                    <div className="text-gray-700 whitespace-nowrap">{item.name}</div>
+                                  <div className="min-w-0">
+                                    <div className="text-gray-700 truncate">{item.name}</div>
                                     <div className="text-xs text-gray-400 flex items-center gap-1">
-                                      <span>{item.frequency}</span>
+                                      <span className="truncate">{item.frequency}</span>
                                       {noMonthItem && (
-                                        <span className="px-1 py-0.5 bg-gray-100 text-gray-400 rounded">実施月未設定</span>
+                                        <span className="px-1 py-0.5 bg-gray-100 text-gray-400 rounded flex-shrink-0">未設定</span>
                                       )}
                                     </div>
                                   </div>
@@ -236,13 +243,13 @@ export default function RecurringTaskList({ mansion }) {
                                   )}
                                 </td>
                               ))}
-                              <td className="text-right px-3 py-2 text-gray-600 whitespace-nowrap">
+                              <td className="text-right px-2 py-2 text-gray-600 truncate">
                                 {itemAnnualCost.toLocaleString()}
                               </td>
-                              <td className="text-right px-3 py-2 text-gray-600 whitespace-nowrap">
+                              <td className="text-right px-2 py-2 text-gray-600 truncate">
                                 {itemAnnualIncome.toLocaleString()}
                               </td>
-                              <td className={`text-right px-3 py-2 font-medium whitespace-nowrap ${itemAnnualProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              <td className={`text-right px-2 py-2 font-medium truncate ${itemAnnualProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {itemAnnualProfit.toLocaleString()}
                               </td>
                               <td className="px-3 py-2" />
@@ -258,20 +265,20 @@ export default function RecurringTaskList({ mansion }) {
                     const tProfit = tIncome - tCost
                     return [
                       <tr key={task.id} className="border-b border-gray-100 bg-white hover:bg-gray-50">
-                        <td className="px-4 py-2.5 sticky left-0 bg-white">
-                          <div className="font-medium text-gray-800 whitespace-nowrap">{task.name}</div>
+                        <td className="px-3 py-2.5">
+                          <div className="font-medium text-gray-800 truncate">{task.name}</div>
                           <div className="text-xs text-gray-400 flex items-center gap-1.5">
-                            <span>{task.frequency}</span>
+                            <span className="truncate">{task.frequency}</span>
                             {noMonth && (
-                              <span className="px-1 py-0.5 bg-gray-100 text-gray-400 rounded text-xs">実施月未設定</span>
+                              <span className="px-1 py-0.5 bg-gray-100 text-gray-400 rounded text-xs flex-shrink-0">未設定</span>
                             )}
                           </div>
                           {task.vendor_name && (
-                            <div className="text-xs text-blue-500 whitespace-nowrap">{task.vendor_name}</div>
+                            <div className="text-xs text-blue-500 truncate">{task.vendor_name}</div>
                           )}
                         </td>
                         {Array.from({ length: 12 }, (_, i) => (
-                          <td key={i} className="text-center px-1.5 py-2.5">
+                          <td key={i} className="text-center py-2.5">
                             {!noMonth && task.months.includes(i + 1) ? (
                               <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-600 rounded-full text-xs font-bold">
                                 ✓
@@ -281,16 +288,16 @@ export default function RecurringTaskList({ mansion }) {
                             )}
                           </td>
                         ))}
-                        <td className="text-right px-3 py-2.5 text-gray-600 whitespace-nowrap">
+                        <td className="text-right px-2 py-2.5 text-gray-600 truncate">
                           {tCost.toLocaleString()}
                         </td>
-                        <td className="text-right px-3 py-2.5 text-gray-600 whitespace-nowrap">
+                        <td className="text-right px-2 py-2.5 text-gray-600 truncate">
                           {tIncome.toLocaleString()}
                         </td>
-                        <td className={`text-right px-3 py-2.5 font-medium whitespace-nowrap ${tProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <td className={`text-right px-2 py-2.5 font-medium truncate ${tProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {tProfit.toLocaleString()}
                         </td>
-                        <td className="px-3 py-2.5">
+                        <td className="px-2 py-2.5">
                           <div className="flex gap-1">
                             <button
                               onClick={() => openEdit(task)}
@@ -312,35 +319,29 @@ export default function RecurringTaskList({ mansion }) {
                 </tbody>
                 <tfoot className="border-t-2 border-gray-300">
                   <tr className="bg-blue-50">
-                    <td className="px-4 py-2 text-xs font-semibold text-gray-600 sticky left-0 bg-blue-50">
-                      月間コスト
-                    </td>
+                    <td className="px-3 py-2 text-xs font-semibold text-gray-600">月間コスト</td>
                     {monthlyCosts.map((cost, i) => (
-                      <td key={i} className="text-center px-1.5 py-2 text-xs text-gray-600 whitespace-nowrap">
+                      <td key={i} className="text-center py-2 text-xs text-gray-600 truncate">
                         {cost > 0 ? cost.toLocaleString() : <span className="text-gray-300">–</span>}
                       </td>
                     ))}
                     <td colSpan={4}></td>
                   </tr>
                   <tr className="bg-green-50">
-                    <td className="px-4 py-2 text-xs font-semibold text-gray-600 sticky left-0 bg-green-50">
-                      月間受取
-                    </td>
+                    <td className="px-3 py-2 text-xs font-semibold text-gray-600">月間受取</td>
                     {monthlyIncomes.map((inc, i) => (
-                      <td key={i} className="text-center px-1.5 py-2 text-xs text-gray-600 whitespace-nowrap">
+                      <td key={i} className="text-center py-2 text-xs text-gray-600 truncate">
                         {inc > 0 ? inc.toLocaleString() : <span className="text-gray-300">–</span>}
                       </td>
                     ))}
                     <td colSpan={4}></td>
                   </tr>
                   <tr className="bg-gray-100">
-                    <td className="px-4 py-2 text-xs font-semibold text-gray-600 sticky left-0 bg-gray-100">
-                      月間利益
-                    </td>
+                    <td className="px-3 py-2 text-xs font-semibold text-gray-600">月間利益</td>
                     {Array.from({ length: 12 }, (_, i) => {
                       const p = monthlyIncomes[i] - monthlyCosts[i]
                       return (
-                        <td key={i} className="text-center px-1.5 py-2 text-xs font-medium whitespace-nowrap">
+                        <td key={i} className="text-center py-2 text-xs font-medium truncate">
                           {monthlyCosts[i] > 0 || monthlyIncomes[i] > 0 ? (
                             <span className={p >= 0 ? 'text-green-600' : 'text-red-600'}>
                               {p.toLocaleString()}
@@ -355,7 +356,6 @@ export default function RecurringTaskList({ mansion }) {
                   </tr>
                 </tfoot>
               </table>
-            </div>
           </div>
         )}
       </div>
