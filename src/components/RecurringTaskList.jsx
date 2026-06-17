@@ -216,17 +216,17 @@ export default function RecurringTaskList({ mansion }) {
                           return (
                             <tr
                               key={`item-${item.id}`}
-                              className={`border-b ${isLastItem ? 'border-gray-300' : 'border-gray-100'} bg-white hover:bg-blue-50`}
+                              className={`border-b ${isLastItem ? 'border-gray-300' : 'border-gray-100'} bg-white hover:bg-slate-50`}
                             >
                               <td className="px-3 py-2">
                                 <div className="flex items-start gap-1">
-                                  <span className="text-gray-300 text-xs mt-0.5 flex-shrink-0">└</span>
+                                  <span className="text-slate-400 text-xs mt-0.5 flex-shrink-0">└</span>
                                   <div className="min-w-0">
-                                    <div className="text-gray-700 truncate">{item.name}</div>
-                                    <div className="text-xs text-gray-400 flex items-center gap-1">
+                                    <div className="text-slate-600 truncate">{item.name}</div>
+                                    <div className="text-xs text-slate-400 flex items-center gap-1">
                                       <span className="truncate">{item.frequency}</span>
                                       {noMonthItem && (
-                                        <span className="px-1 py-0.5 bg-gray-100 text-gray-400 rounded flex-shrink-0">未設定</span>
+                                        <span className="px-1 py-0.5 bg-slate-100 text-slate-400 rounded flex-shrink-0">未設定</span>
                                       )}
                                     </div>
                                   </div>
@@ -235,21 +235,21 @@ export default function RecurringTaskList({ mansion }) {
                               {Array.from({ length: 12 }, (_, i) => (
                                 <td key={i} className="text-center px-1.5 py-2">
                                   {!noMonthItem && item.months.includes(i + 1) ? (
-                                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-600 rounded-full text-xs font-bold">
+                                    <span className="inline-flex items-center justify-center w-5 h-5 bg-sky-100 text-sky-600 rounded-full text-xs font-bold">
                                       ✓
                                     </span>
                                   ) : (
-                                    <span className="text-gray-200 text-xs">–</span>
+                                    <span className="text-slate-200 text-xs">–</span>
                                   )}
                                 </td>
                               ))}
-                              <td className="text-right px-2 py-2 text-gray-600 truncate">
+                              <td className="text-right px-2 py-2 text-slate-500 truncate">
                                 {itemAnnualCost.toLocaleString()}
                               </td>
-                              <td className="text-right px-2 py-2 text-gray-600 truncate">
+                              <td className="text-right px-2 py-2 text-slate-500 truncate">
                                 {itemAnnualIncome.toLocaleString()}
                               </td>
-                              <td className={`text-right px-2 py-2 font-medium truncate ${itemAnnualProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              <td className={`text-right px-2 py-2 font-medium truncate ${itemAnnualProfit >= 0 ? 'text-teal-600' : 'text-rose-500'}`}>
                                 {itemAnnualProfit.toLocaleString()}
                               </td>
                               <td className="px-3 py-2" />
