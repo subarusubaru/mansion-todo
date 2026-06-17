@@ -22,6 +22,20 @@ function itemAnnualCount(item) {
   return item.months.length
 }
 
+function calcTaskAnnuals(task) {
+  const items = task.recurring_task_items || []
+  if (items.length > 0) {
+    let cost = 0, income = 0
+    for (const item of items) {
+      const cnt = itemAnnualCount(item)
+      cost += item.vendor_cost * cnt
+      income += item.income * cnt
+    }
+    return { cost, income }
+  }
+  return { cost: task.vendor_cost * 12, income: task.income * 12 }
+}
+
 export default function RecurringTaskList({ mansion }) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -87,6 +101,22 @@ export default function RecurringTaskList({ mansion }) {
   }
   const totalAnnualProfit = totalAnnualIncome - totalAnnualCost
 
+  // Group tasks by vendor name, sort within each group by task name
+  const vendorMap = new Map()
+  for (const task of tasks) {
+    const key = task.vendor_name?.trim() || '業者未設定'
+    if (!vendorMap.has(key)) vendorMap.set(key, [])
+    vendorMap.get(key).push(task)
+  }
+  const vendorNames = [...vendorMap.keys()].sort((a, b) => {
+    if (a === '業者未設定') return 1
+    if (b === '業者未設定') return -1
+    return a.localeCompare(b, 'ja')
+  })
+  for (const vendorTasks of vendorMap.values()) {
+    vendorTasks.sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* 年間サマリー + 追加ボタン */}
@@ -126,68 +156,211 @@ export default function RecurringTaskList({ mansion }) {
         ) : (
           <div className="bg-white rounded-xl border border-gray-200">
             <table className="w-full text-sm border-collapse table-fixed [&_th]:border-r [&_th]:border-gray-200 [&_td]:border-r [&_td]:border-gray-200 [&_th:last-child]:border-r-0 [&_td:last-child]:border-r-0">
-                <colgroup>
-                  <col className="w-40" />
-                  {Array.from({ length: 12 }, (_, i) => <col key={i} className="w-10" />)}
-                  <col className="w-20" />
-                  <col className="w-20" />
-                  <col className="w-20" />
-                  <col className="w-16" />
-                </colgroup>
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="sticky top-0 z-10 text-left px-3 py-2.5 font-medium text-gray-600 bg-gray-50">
-                      業務名
+              <colgroup>
+                <col className="w-40" />
+                {Array.from({ length: 12 }, (_, i) => <col key={i} className="w-10" />)}
+                <col className="w-20" />
+                <col className="w-20" />
+                <col className="w-20" />
+                <col className="w-16" />
+              </colgroup>
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="sticky top-0 z-10 text-left px-3 py-2.5 font-medium text-gray-600 bg-gray-50">
+                    業務名
+                  </th>
+                  {MONTH_SHORT.map(m => (
+                    <th key={m} className="sticky top-0 z-10 text-center py-2.5 font-medium text-gray-500 bg-gray-50 text-xs">
+                      {m}月
                     </th>
-                    {MONTH_SHORT.map(m => (
-                      <th key={m} className="sticky top-0 z-10 text-center py-2.5 font-medium text-gray-500 bg-gray-50 text-xs">
-                        {m}月
-                      </th>
-                    ))}
-                    <th className="sticky top-0 z-10 text-right px-2 py-2.5 font-medium text-gray-600 bg-gray-50 text-xs">年コスト</th>
-                    <th className="sticky top-0 z-10 text-right px-2 py-2.5 font-medium text-gray-600 bg-gray-50 text-xs">年受取</th>
-                    <th className="sticky top-0 z-10 text-right px-2 py-2.5 font-medium text-gray-600 bg-gray-50 text-xs">年利益</th>
-                    <th className="sticky top-0 z-10 bg-gray-50"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tasks.flatMap((task) => {
-                    const items = task.recurring_task_items || []
-                    const hasItems = items.length > 0
-                    const noMonth = task.months.length === 0
+                  ))}
+                  <th className="sticky top-0 z-10 text-right px-2 py-2.5 font-medium text-gray-600 bg-gray-50 text-xs">年コスト</th>
+                  <th className="sticky top-0 z-10 text-right px-2 py-2.5 font-medium text-gray-600 bg-gray-50 text-xs">年受取</th>
+                  <th className="sticky top-0 z-10 text-right px-2 py-2.5 font-medium text-gray-600 bg-gray-50 text-xs">年利益</th>
+                  <th className="sticky top-0 z-10 bg-gray-50"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {vendorNames.flatMap(vendorName => {
+                  const vendorTasks = vendorMap.get(vendorName)
 
-                    if (hasItems) {
-                      // Aggregate costs from items
-                      let taskAnnualCost = 0, taskAnnualIncome = 0
-                      for (const item of items) {
-                        const cnt = itemAnnualCount(item)
-                        taskAnnualCost += item.vendor_cost * cnt
-                        taskAnnualIncome += item.income * cnt
+                  // Vendor subtotals
+                  let vCost = 0, vIncome = 0
+                  for (const task of vendorTasks) {
+                    const { cost, income } = calcTaskAnnuals(task)
+                    vCost += cost
+                    vIncome += income
+                  }
+                  const vProfit = vIncome - vCost
+                  const isUnset = vendorName === '業者未設定'
+
+                  return [
+                    // Vendor header row
+                    <tr key={`vendor-${vendorName}`} className="border-b border-slate-500">
+                      <td className="px-3 py-1.5 bg-slate-600">
+                        <div className="font-semibold text-white text-sm truncate">
+                          {isUnset
+                            ? <span className="text-slate-300 italic">{vendorName}</span>
+                            : vendorName}
+                        </div>
+                        <div className="text-xs text-slate-400">{vendorTasks.length}業務</div>
+                      </td>
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <td key={i} className="bg-slate-600" />
+                      ))}
+                      <td className="text-right px-2 py-1.5 bg-slate-600 text-slate-200 font-medium text-xs truncate">
+                        {vCost > 0 ? vCost.toLocaleString() : <span className="text-slate-500">—</span>}
+                      </td>
+                      <td className="text-right px-2 py-1.5 bg-slate-600 text-slate-200 font-medium text-xs truncate">
+                        {vIncome > 0 ? vIncome.toLocaleString() : <span className="text-slate-500">—</span>}
+                      </td>
+                      <td className={`text-right px-2 py-1.5 bg-slate-600 font-bold text-xs truncate ${(vCost === 0 && vIncome === 0) ? 'text-slate-500' : vProfit >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
+                        {(vCost === 0 && vIncome === 0) ? '—' : vProfit.toLocaleString()}
+                      </td>
+                      <td className="bg-slate-600" />
+                    </tr>,
+
+                    // Tasks within this vendor group
+                    ...vendorTasks.flatMap(task => {
+                      const items = task.recurring_task_items || []
+                      const hasItems = items.length > 0
+                      const noMonth = task.months.length === 0
+
+                      if (hasItems) {
+                        let taskAnnualCost = 0, taskAnnualIncome = 0
+                        for (const item of items) {
+                          const cnt = itemAnnualCount(item)
+                          taskAnnualCost += item.vendor_cost * cnt
+                          taskAnnualIncome += item.income * cnt
+                        }
+                        const taskAnnualProfit = taskAnnualIncome - taskAnnualCost
+
+                        return [
+                          // Task group header row
+                          <tr key={`task-${task.id}`} className="border-b border-gray-200 bg-gray-50">
+                            <td className="px-3 py-2">
+                              <div className="font-semibold text-gray-700 truncate">{task.name}</div>
+                            </td>
+                            {Array.from({ length: 12 }, (_, i) => (
+                              <td key={i} className="px-1.5 py-2" />
+                            ))}
+                            <td className="text-right px-2 py-2 text-gray-600 font-medium text-xs truncate">
+                              {taskAnnualCost.toLocaleString()}
+                            </td>
+                            <td className="text-right px-2 py-2 text-gray-600 font-medium text-xs truncate">
+                              {taskAnnualIncome.toLocaleString()}
+                            </td>
+                            <td className={`text-right px-2 py-2 font-semibold text-xs truncate ${taskAnnualProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {taskAnnualProfit.toLocaleString()}
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => openEdit(task)}
+                                  className="text-xs px-2 py-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                >
+                                  編集
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(task.id)}
+                                  className="text-xs px-2 py-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                >
+                                  削除
+                                </button>
+                              </div>
+                            </td>
+                          </tr>,
+                          // Item rows
+                          ...items.map((item, itemIdx) => {
+                            const noMonthItem = !item.months || item.months.length === 0
+                            const cnt = itemAnnualCount(item)
+                            const itemAnnualCost = item.vendor_cost * cnt
+                            const itemAnnualIncome = item.income * cnt
+                            const itemAnnualProfit = itemAnnualIncome - itemAnnualCost
+                            const isLastItem = itemIdx === items.length - 1
+
+                            return (
+                              <tr
+                                key={`item-${item.id}`}
+                                className={`border-b ${isLastItem ? 'border-gray-300' : 'border-gray-100'} bg-white hover:bg-slate-50`}
+                              >
+                                <td className="px-3 py-2">
+                                  <div className="flex items-start gap-1">
+                                    <span className="text-slate-400 text-xs mt-0.5 flex-shrink-0">└</span>
+                                    <div className="min-w-0">
+                                      <div className="text-slate-600 truncate">{item.name}</div>
+                                      <div className="text-xs text-slate-400 flex items-center gap-1">
+                                        <span className="truncate">{item.frequency}</span>
+                                        {noMonthItem && (
+                                          <span className="px-1 py-0.5 bg-slate-100 text-slate-400 rounded flex-shrink-0">未設定</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                                {Array.from({ length: 12 }, (_, i) => (
+                                  <td key={i} className="text-center px-1.5 py-2">
+                                    {!noMonthItem && item.months.includes(i + 1) ? (
+                                      <span className="inline-flex items-center justify-center w-5 h-5 bg-sky-100 text-sky-600 rounded-full text-xs font-bold">
+                                        ✓
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-200 text-xs">–</span>
+                                    )}
+                                  </td>
+                                ))}
+                                <td className="text-right px-2 py-2 text-slate-500 truncate">
+                                  {itemAnnualCost.toLocaleString()}
+                                </td>
+                                <td className="text-right px-2 py-2 text-slate-500 truncate">
+                                  {itemAnnualIncome.toLocaleString()}
+                                </td>
+                                <td className={`text-right px-2 py-2 font-medium truncate ${itemAnnualProfit >= 0 ? 'text-teal-600' : 'text-rose-500'}`}>
+                                  {itemAnnualProfit.toLocaleString()}
+                                </td>
+                                <td className="px-3 py-2" />
+                              </tr>
+                            )
+                          }),
+                        ]
                       }
-                      const taskAnnualProfit = taskAnnualIncome - taskAnnualCost
 
+                      // No items: single task row
+                      const tCost = task.vendor_cost * 12
+                      const tIncome = task.income * 12
+                      const tProfit = tIncome - tCost
                       return [
-                        // Group header row
-                        <tr key={`task-${task.id}`} className="border-b border-gray-200 bg-gray-50">
-                          <td className="px-3 py-2">
-                            <div className="font-semibold text-gray-700 truncate">{task.name}</div>
-                            {task.vendor_name && (
-                              <div className="text-xs text-blue-500 truncate">{task.vendor_name}</div>
-                            )}
+                        <tr key={task.id} className="border-b border-gray-100 bg-white hover:bg-gray-50">
+                          <td className="px-3 py-2.5">
+                            <div className="font-medium text-gray-800 truncate">{task.name}</div>
+                            <div className="text-xs text-gray-400 flex items-center gap-1.5">
+                              <span className="truncate">{task.frequency}</span>
+                              {noMonth && (
+                                <span className="px-1 py-0.5 bg-gray-100 text-gray-400 rounded text-xs flex-shrink-0">未設定</span>
+                              )}
+                            </div>
                           </td>
                           {Array.from({ length: 12 }, (_, i) => (
-                            <td key={i} className="px-1.5 py-2" />
+                            <td key={i} className="text-center py-2.5">
+                              {!noMonth && task.months.includes(i + 1) ? (
+                                <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-600 rounded-full text-xs font-bold">
+                                  ✓
+                                </span>
+                              ) : (
+                                <span className="text-gray-200 text-xs">–</span>
+                              )}
+                            </td>
                           ))}
-                          <td className="text-right px-2 py-2 text-gray-600 font-medium text-xs truncate">
-                            {taskAnnualCost.toLocaleString()}
+                          <td className="text-right px-2 py-2.5 text-gray-600 truncate">
+                            {tCost.toLocaleString()}
                           </td>
-                          <td className="text-right px-2 py-2 text-gray-600 font-medium text-xs truncate">
-                            {taskAnnualIncome.toLocaleString()}
+                          <td className="text-right px-2 py-2.5 text-gray-600 truncate">
+                            {tIncome.toLocaleString()}
                           </td>
-                          <td className={`text-right px-2 py-2 font-semibold text-xs truncate ${taskAnnualProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {taskAnnualProfit.toLocaleString()}
+                          <td className={`text-right px-2 py-2.5 font-medium truncate ${tProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {tProfit.toLocaleString()}
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-2.5">
                             <div className="flex gap-1">
                               <button
                                 onClick={() => openEdit(task)}
@@ -204,158 +377,50 @@ export default function RecurringTaskList({ mansion }) {
                             </div>
                           </td>
                         </tr>,
-                        // Item rows
-                        ...items.map((item, itemIdx) => {
-                          const noMonthItem = !item.months || item.months.length === 0
-                          const cnt = itemAnnualCount(item)
-                          const itemAnnualCost = item.vendor_cost * cnt
-                          const itemAnnualIncome = item.income * cnt
-                          const itemAnnualProfit = itemAnnualIncome - itemAnnualCost
-                          const isLastItem = itemIdx === items.length - 1
-
-                          return (
-                            <tr
-                              key={`item-${item.id}`}
-                              className={`border-b ${isLastItem ? 'border-gray-300' : 'border-gray-100'} bg-white hover:bg-slate-50`}
-                            >
-                              <td className="px-3 py-2">
-                                <div className="flex items-start gap-1">
-                                  <span className="text-slate-400 text-xs mt-0.5 flex-shrink-0">└</span>
-                                  <div className="min-w-0">
-                                    <div className="text-slate-600 truncate">{item.name}</div>
-                                    <div className="text-xs text-slate-400 flex items-center gap-1">
-                                      <span className="truncate">{item.frequency}</span>
-                                      {noMonthItem && (
-                                        <span className="px-1 py-0.5 bg-slate-100 text-slate-400 rounded flex-shrink-0">未設定</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                              {Array.from({ length: 12 }, (_, i) => (
-                                <td key={i} className="text-center px-1.5 py-2">
-                                  {!noMonthItem && item.months.includes(i + 1) ? (
-                                    <span className="inline-flex items-center justify-center w-5 h-5 bg-sky-100 text-sky-600 rounded-full text-xs font-bold">
-                                      ✓
-                                    </span>
-                                  ) : (
-                                    <span className="text-slate-200 text-xs">–</span>
-                                  )}
-                                </td>
-                              ))}
-                              <td className="text-right px-2 py-2 text-slate-500 truncate">
-                                {itemAnnualCost.toLocaleString()}
-                              </td>
-                              <td className="text-right px-2 py-2 text-slate-500 truncate">
-                                {itemAnnualIncome.toLocaleString()}
-                              </td>
-                              <td className={`text-right px-2 py-2 font-medium truncate ${itemAnnualProfit >= 0 ? 'text-teal-600' : 'text-rose-500'}`}>
-                                {itemAnnualProfit.toLocaleString()}
-                              </td>
-                              <td className="px-3 py-2" />
-                            </tr>
-                          )
-                        }),
                       ]
-                    }
-
-                    // No items: single task row (backward compat)
-                    const tCost = task.vendor_cost * 12
-                    const tIncome = task.income * 12
-                    const tProfit = tIncome - tCost
-                    return [
-                      <tr key={task.id} className="border-b border-gray-100 bg-white hover:bg-gray-50">
-                        <td className="px-3 py-2.5">
-                          <div className="font-medium text-gray-800 truncate">{task.name}</div>
-                          <div className="text-xs text-gray-400 flex items-center gap-1.5">
-                            <span className="truncate">{task.frequency}</span>
-                            {noMonth && (
-                              <span className="px-1 py-0.5 bg-gray-100 text-gray-400 rounded text-xs flex-shrink-0">未設定</span>
-                            )}
-                          </div>
-                          {task.vendor_name && (
-                            <div className="text-xs text-blue-500 truncate">{task.vendor_name}</div>
-                          )}
-                        </td>
-                        {Array.from({ length: 12 }, (_, i) => (
-                          <td key={i} className="text-center py-2.5">
-                            {!noMonth && task.months.includes(i + 1) ? (
-                              <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-600 rounded-full text-xs font-bold">
-                                ✓
-                              </span>
-                            ) : (
-                              <span className="text-gray-200 text-xs">–</span>
-                            )}
-                          </td>
-                        ))}
-                        <td className="text-right px-2 py-2.5 text-gray-600 truncate">
-                          {tCost.toLocaleString()}
-                        </td>
-                        <td className="text-right px-2 py-2.5 text-gray-600 truncate">
-                          {tIncome.toLocaleString()}
-                        </td>
-                        <td className={`text-right px-2 py-2.5 font-medium truncate ${tProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {tProfit.toLocaleString()}
-                        </td>
-                        <td className="px-2 py-2.5">
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => openEdit(task)}
-                              className="text-xs px-2 py-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                            >
-                              編集
-                            </button>
-                            <button
-                              onClick={() => handleDelete(task.id)}
-                              className="text-xs px-2 py-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                            >
-                              削除
-                            </button>
-                          </div>
-                        </td>
-                      </tr>,
-                    ]
+                    }),
+                  ]
+                })}
+              </tbody>
+              <tfoot className="border-t-2 border-gray-300">
+                <tr className="bg-blue-50">
+                  <td className="px-3 py-2 text-xs font-semibold text-gray-600">月間コスト</td>
+                  {monthlyCosts.map((cost, i) => (
+                    <td key={i} className="text-center py-2 text-xs text-gray-600 truncate">
+                      {cost > 0 ? cost.toLocaleString() : <span className="text-gray-300">–</span>}
+                    </td>
+                  ))}
+                  <td colSpan={4}></td>
+                </tr>
+                <tr className="bg-green-50">
+                  <td className="px-3 py-2 text-xs font-semibold text-gray-600">月間受取</td>
+                  {monthlyIncomes.map((inc, i) => (
+                    <td key={i} className="text-center py-2 text-xs text-gray-600 truncate">
+                      {inc > 0 ? inc.toLocaleString() : <span className="text-gray-300">–</span>}
+                    </td>
+                  ))}
+                  <td colSpan={4}></td>
+                </tr>
+                <tr className="bg-gray-100">
+                  <td className="px-3 py-2 text-xs font-semibold text-gray-600">月間利益</td>
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const p = monthlyIncomes[i] - monthlyCosts[i]
+                    return (
+                      <td key={i} className="text-center py-2 text-xs font-medium truncate">
+                        {monthlyCosts[i] > 0 || monthlyIncomes[i] > 0 ? (
+                          <span className={p >= 0 ? 'text-green-600' : 'text-red-600'}>
+                            {p.toLocaleString()}
+                          </span>
+                        ) : (
+                          <span className="text-gray-300">–</span>
+                        )}
+                      </td>
+                    )
                   })}
-                </tbody>
-                <tfoot className="border-t-2 border-gray-300">
-                  <tr className="bg-blue-50">
-                    <td className="px-3 py-2 text-xs font-semibold text-gray-600">月間コスト</td>
-                    {monthlyCosts.map((cost, i) => (
-                      <td key={i} className="text-center py-2 text-xs text-gray-600 truncate">
-                        {cost > 0 ? cost.toLocaleString() : <span className="text-gray-300">–</span>}
-                      </td>
-                    ))}
-                    <td colSpan={4}></td>
-                  </tr>
-                  <tr className="bg-green-50">
-                    <td className="px-3 py-2 text-xs font-semibold text-gray-600">月間受取</td>
-                    {monthlyIncomes.map((inc, i) => (
-                      <td key={i} className="text-center py-2 text-xs text-gray-600 truncate">
-                        {inc > 0 ? inc.toLocaleString() : <span className="text-gray-300">–</span>}
-                      </td>
-                    ))}
-                    <td colSpan={4}></td>
-                  </tr>
-                  <tr className="bg-gray-100">
-                    <td className="px-3 py-2 text-xs font-semibold text-gray-600">月間利益</td>
-                    {Array.from({ length: 12 }, (_, i) => {
-                      const p = monthlyIncomes[i] - monthlyCosts[i]
-                      return (
-                        <td key={i} className="text-center py-2 text-xs font-medium truncate">
-                          {monthlyCosts[i] > 0 || monthlyIncomes[i] > 0 ? (
-                            <span className={p >= 0 ? 'text-green-600' : 'text-red-600'}>
-                              {p.toLocaleString()}
-                            </span>
-                          ) : (
-                            <span className="text-gray-300">–</span>
-                          )}
-                        </td>
-                      )
-                    })}
-                    <td colSpan={4}></td>
-                  </tr>
-                </tfoot>
-              </table>
+                  <td colSpan={4}></td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
         )}
       </div>
