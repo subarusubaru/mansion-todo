@@ -4,22 +4,8 @@ import RecurringTaskForm from './RecurringTaskForm'
 
 const MONTH_SHORT = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
 
-const FREQ_MAP = {
-  '毎月':  { annualCount: 12 },
-  '月2回': { annualCount: 24 },
-  '月3回': { annualCount: 36 },
-  '週1回': { annualCount: 48 },
-  '週2回': { annualCount: 96 },
-  '年1回': { annualCount: 1 },
-  '年2回': { annualCount: 2 },
-  '年4回': { annualCount: 4 },
-  '年6回': { annualCount: 6 },
-}
-
-function itemAnnualCount(item) {
-  const noMonth = !item.months || item.months.length === 0
-  if (noMonth) return FREQ_MAP[item.frequency]?.annualCount ?? 0
-  return item.months.length
+function itemAnnualCount() {
+  return 12
 }
 
 function calcTaskAnnuals(task) {
