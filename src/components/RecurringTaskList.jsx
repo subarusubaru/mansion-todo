@@ -125,7 +125,7 @@ export default function RecurringTaskList({ mansion }) {
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-200">
-            <table className="w-full text-sm border-collapse table-fixed">
+            <table className="w-full text-sm border-collapse table-fixed [&_th]:border-r [&_th]:border-gray-200 [&_td]:border-r [&_td]:border-gray-200 [&_th:last-child]:border-r-0 [&_td:last-child]:border-r-0">
                 <colgroup>
                   <col className="w-40" />
                   {Array.from({ length: 12 }, (_, i) => <col key={i} className="w-10" />)}
